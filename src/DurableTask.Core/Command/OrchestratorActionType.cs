@@ -13,7 +13,8 @@
 
 namespace DurableTask.Core.Command
 {
-    internal enum OrchestratorActionType
+    // TODO: Doc comments
+    public enum OrchestratorActionType
     {
         ScheduleOrchestrator,
         CreateSubOrchestration,

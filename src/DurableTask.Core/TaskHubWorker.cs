@@ -17,7 +17,6 @@ namespace DurableTask.Core
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    using DurableTask.Core.Settings;
 
     /// <summary>
     ///     Allows users to load the TaskOrchestration and TaskActivity classes and start
@@ -27,6 +26,7 @@ namespace DurableTask.Core
     {
         readonly INameVersionObjectManager<TaskActivity> activityManager;
         readonly INameVersionObjectManager<TaskOrchestration> orchestrationManager;
+        readonly ITaskOrchestrationExecutorFactory executorFactory;
 
         readonly SemaphoreSlim slimLock = new SemaphoreSlim(1, 1);
 
@@ -53,6 +53,22 @@ namespace DurableTask.Core
         }
 
         /// <summary>
+        ///     Create a new TaskHubWorker with given OrchestrationService
+        /// </summary>
+        /// <param name="orchestrationService">Reference the orchestration service implmentaion</param>
+        /// <param name="executorFactory">Custom task orchestration executor factory.</param>
+        public TaskHubWorker(
+            IOrchestrationService orchestrationService,
+            ITaskOrchestrationExecutorFactory executorFactory)
+            : this(
+                    orchestrationService,
+                    new NameVersionObjectManager<TaskOrchestration>(),
+                    new NameVersionObjectManager<TaskActivity>(),
+                    executorFactory)
+        {
+        }
+
+        /// <summary>
         ///     Create a new TaskHubWorker with given OrchestrationService and name version managers
         /// </summary>
         /// <param name="orchestrationService">Reference the orchestration service implmentaion</param>
@@ -62,10 +78,31 @@ namespace DurableTask.Core
             IOrchestrationService orchestrationService,
             INameVersionObjectManager<TaskOrchestration> orchestrationObjectManager,
             INameVersionObjectManager<TaskActivity> activityObjectManager)
+            : this(
+                  orchestrationService,
+                  orchestrationObjectManager,
+                  activityObjectManager,
+                  new DefaultTaskOrchestrationExecutorFactory())
         {
-            this.orchestrationManager = orchestrationObjectManager ?? throw new ArgumentException("orchestrationObjectManager");
-            this.activityManager = activityObjectManager ?? throw new ArgumentException("activityObjectManager");
-            this.orchestrationService = orchestrationService ?? throw new ArgumentException("orchestrationService");
+        }
+
+        /// <summary>
+        ///     Create a new TaskHubWorker with given OrchestrationService and name version managers
+        /// </summary>
+        /// <param name="orchestrationService">Reference the orchestration service implmentaion</param>
+        /// <param name="orchestrationObjectManager">NameVersionObjectManager for Orchestrations</param>
+        /// <param name="activityObjectManager">NameVersionObjectManager for Activities</param>
+        /// /// <param name="executorFactory">Custom task orchestration executor factory.</param>
+        public TaskHubWorker(
+            IOrchestrationService orchestrationService,
+            INameVersionObjectManager<TaskOrchestration> orchestrationObjectManager,
+            INameVersionObjectManager<TaskActivity> activityObjectManager,
+            ITaskOrchestrationExecutorFactory executorFactory)
+        {
+            this.orchestrationManager = orchestrationObjectManager ?? throw new ArgumentException(nameof(orchestrationObjectManager));
+            this.activityManager = activityObjectManager ?? throw new ArgumentException(nameof(activityObjectManager));
+            this.orchestrationService = orchestrationService ?? throw new ArgumentException(nameof(orchestrationService));
+            this.executorFactory = executorFactory ?? throw new ArgumentNullException(nameof(executorFactory));
         }
 
         /// <summary>
@@ -92,7 +129,11 @@ namespace DurableTask.Core
                     throw new InvalidOperationException("Worker is already started");
                 }
 
-                orchestrationDispatcher = new TaskOrchestrationDispatcher(orchestrationService, orchestrationManager);
+                orchestrationDispatcher = new TaskOrchestrationDispatcher(
+                    orchestrationService,
+                    orchestrationManager,
+                    executorFactory);
+
                 activityDispatcher = new TaskActivityDispatcher(orchestrationService, activityManager);
 
                 await orchestrationService.StartAsync();
@@ -270,6 +311,14 @@ namespace DurableTask.Core
         public void Dispose()
         {
             ((IDisposable)slimLock).Dispose();
+        }
+
+        sealed class DefaultTaskOrchestrationExecutorFactory : ITaskOrchestrationExecutorFactory
+        {
+            public TaskOrchestrationExecutor GetExecutor(OrchestrationRuntimeState runtimeState, TaskOrchestration taskOrchestration)
+            {
+                return new TaskOrchestrationExecutor(runtimeState, taskOrchestration);
+            }
         }
     }
 }

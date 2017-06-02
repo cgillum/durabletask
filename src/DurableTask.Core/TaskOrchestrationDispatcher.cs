@@ -34,25 +34,18 @@ namespace DurableTask.Core
         readonly INameVersionObjectManager<TaskOrchestration> objectManager;
         readonly IOrchestrationService orchestrationService;
         readonly WorkItemDispatcher<TaskOrchestrationWorkItem> dispatcher;
+        readonly ITaskOrchestrationExecutorFactory orchestratorExecutorFactory;
         static readonly DataConverter DataConverter = new JsonDataConverter();
 
         internal TaskOrchestrationDispatcher(
             IOrchestrationService orchestrationService,
-            INameVersionObjectManager<TaskOrchestration> objectManager)
+            INameVersionObjectManager<TaskOrchestration> objectManager,
+            ITaskOrchestrationExecutorFactory orchestratorExecutorFactory)
         {
-            if (orchestrationService == null)
-            {
-                throw new ArgumentNullException(nameof(orchestrationService));
-            }
+            this.objectManager = objectManager ?? throw new ArgumentNullException(nameof(objectManager));
+            this.orchestrationService = orchestrationService ?? throw new ArgumentNullException(nameof(orchestrationService));
+            this.orchestratorExecutorFactory = orchestratorExecutorFactory ?? throw new ArgumentNullException(nameof(orchestratorExecutorFactory));
 
-            if (objectManager == null)
-            {
-                throw new ArgumentNullException(nameof(objectManager));
-            }
-
-            this.objectManager = objectManager;
-
-            this.orchestrationService = orchestrationService;
             this.dispatcher = new WorkItemDispatcher<TaskOrchestrationWorkItem>(
                 "TaskOrchestrationDispatcher",
                 item => item == null ? string.Empty : item.InstanceId,
@@ -140,7 +133,7 @@ namespace DurableTask.Core
                     "Executing user orchestration: {0}",
                     DataConverter.Serialize(runtimeState.GetOrchestrationRuntimeStateDump(), true));
 
-                IList<OrchestratorAction> decisions = ExecuteOrchestration(runtimeState).ToList();
+                IList<OrchestratorAction> decisions = (await ExecuteOrchestrationAsync(runtimeState)).ToList();
 
                 TraceHelper.TraceInstance(TraceEventType.Information,
                     runtimeState.OrchestrationInstance,
@@ -269,7 +262,7 @@ namespace DurableTask.Core
                 instanceState);
         }
 
-        internal virtual IEnumerable<OrchestratorAction> ExecuteOrchestration(OrchestrationRuntimeState runtimeState)
+        internal virtual async Task<IEnumerable<OrchestratorAction>> ExecuteOrchestrationAsync(OrchestrationRuntimeState runtimeState)
         {
             TaskOrchestration taskOrchestration = objectManager.GetObject(runtimeState.Name, runtimeState.Version);
             if (taskOrchestration == null)
@@ -278,8 +271,8 @@ namespace DurableTask.Core
                     new TypeMissingException($"Orchestration not found: ({runtimeState.Name}, {runtimeState.Version})"));
             }
 
-            var taskOrchestrationExecutor = new TaskOrchestrationExecutor(runtimeState, taskOrchestration);
-            IEnumerable<OrchestratorAction> decisions = taskOrchestrationExecutor.Execute();
+            var taskOrchestrationExecutor = this.orchestratorExecutorFactory.GetExecutor(runtimeState, taskOrchestration);
+            IEnumerable<OrchestratorAction> decisions = await taskOrchestrationExecutor.ExecuteAsync();
             return decisions;
         }
 

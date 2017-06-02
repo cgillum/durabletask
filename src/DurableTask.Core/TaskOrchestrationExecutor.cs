@@ -21,7 +21,7 @@ namespace DurableTask.Core
     using DurableTask.Core.Exceptions;
     using DurableTask.Core.History;
 
-    internal class TaskOrchestrationExecutor
+    public class TaskOrchestrationExecutor
     {
         readonly TaskOrchestrationContext context;
         readonly TaskScheduler decisionScheduler;
@@ -38,7 +38,19 @@ namespace DurableTask.Core
             this.taskOrchestration = taskOrchestration;
         }
 
-        public IEnumerable<OrchestratorAction> Execute()
+        internal async Task<IEnumerable<OrchestratorAction>> ExecuteAsync()
+        {
+            IEnumerable<OrchestratorAction> decisions = await this.OnExecuteAsync();
+            return decisions ?? Enumerable.Empty<OrchestratorAction>();
+        }
+
+        protected virtual Task<IEnumerable<OrchestratorAction>> OnExecuteAsync()
+        {
+            // Extensibility point for custom orchestration executors.
+            return Task.FromResult(this.Execute());
+        }
+
+        protected IEnumerable<OrchestratorAction> Execute()
         {
             SynchronizationContext prevCtx = SynchronizationContext.Current;
 

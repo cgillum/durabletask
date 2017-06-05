@@ -18,7 +18,7 @@ namespace DurableTask.Core.Middleware
     /// <summary>
     /// A function that runs in the task execution middleware pipeline.
     /// </summary>
-    /// <param name="context">The <see cref="DispatchContext"/> for the task execution.</param>
+    /// <param name="context">The <see cref="DispatchMiddlewareContext"/> for the task execution.</param>
     /// <returns>A task that represents the completion of the durable task execution.</returns>
-    public delegate Task DispatchDelegate(DispatchContext context);
+    public delegate Task DispatchMiddlewareDelegate(DispatchMiddlewareContext context);
 }

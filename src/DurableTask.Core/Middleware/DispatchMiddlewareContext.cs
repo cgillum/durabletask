@@ -19,9 +19,9 @@ namespace DurableTask.Core.Middleware
     /// <summary>
     /// Context data that can be used to share data between middleware.
     /// </summary>
-    public class DispatchContext
+    public class DispatchMiddlewareContext
     {
-        internal DispatchContext()
+        internal DispatchMiddlewareContext()
         {
         }
 

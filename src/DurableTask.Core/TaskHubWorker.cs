@@ -28,8 +28,8 @@ namespace DurableTask.Core
         readonly INameVersionObjectManager<TaskActivity> activityManager;
         readonly INameVersionObjectManager<TaskOrchestration> orchestrationManager;
 
-        readonly DispatchPipeline orchestrationDispatchPipeline = new DispatchPipeline();
-        readonly DispatchPipeline activityDispatchPipeline = new DispatchPipeline();
+        readonly DispatchMiddlewarePipeline orchestrationDispatchPipeline = new DispatchMiddlewarePipeline();
+        readonly DispatchMiddlewarePipeline activityDispatchPipeline = new DispatchMiddlewarePipeline();
 
         readonly SemaphoreSlim slimLock = new SemaphoreSlim(1, 1);
 
@@ -85,7 +85,7 @@ namespace DurableTask.Core
         /// Adds a middleware delegate to the orchestration dispatch pipeline.
         /// </summary>
         /// <param name="middleware">Delegate to invoke whenever a message is dispatched to an orchestration.</param>
-        public void AddOrchestrationMiddleware(Func<DispatchContext, Func<Task>, Task> middleware)
+        public void AddOrchestrationDispatcherMiddleware(Func<DispatchMiddlewareContext, Func<Task>, Task> middleware)
         {
             orchestrationDispatchPipeline.Add(middleware ?? throw new ArgumentNullException(nameof(middleware)));
         }
@@ -94,7 +94,7 @@ namespace DurableTask.Core
         /// Adds a middleware delegate to the activity dispatch pipeline.
         /// </summary>
         /// <param name="middleware">Delegate to invoke whenever a message is dispatched to an activity.</param>
-        public void AddActivityMiddleware(Func<DispatchContext, Func<Task>, Task> middleware)
+        public void AddActivityDispatcherMiddleware(Func<DispatchMiddlewareContext, Func<Task>, Task> middleware)
         {
             activityDispatchPipeline.Add(middleware ?? throw new ArgumentNullException(nameof(middleware)));
         }

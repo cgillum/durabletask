@@ -35,13 +35,13 @@ namespace DurableTask.Core
         readonly INameVersionObjectManager<TaskOrchestration> objectManager;
         readonly IOrchestrationService orchestrationService;
         readonly WorkItemDispatcher<TaskOrchestrationWorkItem> dispatcher;
-        readonly DispatchPipeline dispatchPipeline;
+        readonly DispatchMiddlewarePipeline dispatchPipeline;
         static readonly DataConverter DataConverter = new JsonDataConverter();
 
         internal TaskOrchestrationDispatcher(
             IOrchestrationService orchestrationService,
             INameVersionObjectManager<TaskOrchestration> objectManager,
-            DispatchPipeline dispatchPipeline)
+            DispatchMiddlewarePipeline dispatchPipeline)
         {
             this.objectManager = objectManager ?? throw new ArgumentNullException(nameof(objectManager));
             this.orchestrationService = orchestrationService ?? throw new ArgumentNullException(nameof(orchestrationService));
@@ -272,7 +272,7 @@ namespace DurableTask.Core
                     new TypeMissingException($"Orchestration not found: ({runtimeState.Name}, {runtimeState.Version})"));
             }
 
-            var dispatchContext = new DispatchContext();
+            var dispatchContext = new DispatchMiddlewareContext();
             dispatchContext.SetProperty(runtimeState.OrchestrationInstance);
             dispatchContext.SetProperty(taskOrchestration);
             dispatchContext.SetProperty(runtimeState);

@@ -23,7 +23,7 @@ namespace DurableTask.Core.Tests
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class MiddlewareTests
+    public class DispatcherMiddlewareTests
     {
         TaskHubWorker worker;
         TaskHubClient client;
@@ -49,7 +49,7 @@ namespace DurableTask.Core.Tests
         }
 
         [TestMethod]
-        public async Task MiddlewareContextBuiltInProperties()
+        public async Task DispatchMiddlewareContextBuiltInProperties()
         {
             TaskOrchestration orchestration = null;
             OrchestrationRuntimeState state = null;
@@ -59,7 +59,7 @@ namespace DurableTask.Core.Tests
             TaskScheduledEvent taskScheduledEvent = null;
             OrchestrationInstance instance2 = null;
 
-            this.worker.AddOrchestrationMiddleware((context, next) =>
+            this.worker.AddOrchestrationDispatcherMiddleware((context, next) =>
             {
                 orchestration = context.GetProperty<TaskOrchestration>();
                 state = context.GetProperty<OrchestrationRuntimeState>();
@@ -68,7 +68,7 @@ namespace DurableTask.Core.Tests
                 return next();
             });
 
-            this.worker.AddActivityMiddleware((context, next) =>
+            this.worker.AddActivityDispatcherMiddleware((context, next) =>
             {
                 activity = context.GetProperty<TaskActivity>();
                 taskScheduledEvent = context.GetProperty<TaskScheduledEvent>();
@@ -95,14 +95,14 @@ namespace DurableTask.Core.Tests
         }
 
         [TestMethod]
-        public async Task OrchestrationMiddlewareContextFlow()
+        public async Task OrchestrationDispatcherMiddlewareContextFlow()
         {
             StringBuilder output = null;
 
             for (int i = 0; i < 10; i++)
             {
                 string value = i.ToString();
-                this.worker.AddOrchestrationMiddleware(async (context, next) =>
+                this.worker.AddOrchestrationDispatcherMiddleware(async (context, next) =>
                 {
                     output = context.GetProperty<StringBuilder>("output");
                     if (output == null)
@@ -129,14 +129,14 @@ namespace DurableTask.Core.Tests
         }
 
         [TestMethod]
-        public async Task ActivityMiddlewareContextFlow()
+        public async Task ActivityDispatcherMiddlewareContextFlow()
         {
             StringBuilder output = null;
 
             for (int i = 0; i < 10; i++)
             {
                 string value = i.ToString();
-                this.worker.AddActivityMiddleware(async (context, next) =>
+                this.worker.AddActivityDispatcherMiddleware(async (context, next) =>
                 {
                     output = context.GetProperty<StringBuilder>("output");
                     if (output == null)

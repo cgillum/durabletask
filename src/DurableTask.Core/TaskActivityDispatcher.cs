@@ -31,12 +31,12 @@ namespace DurableTask.Core
         readonly INameVersionObjectManager<TaskActivity> objectManager;
         readonly WorkItemDispatcher<TaskActivityWorkItem> dispatcher; 
         readonly IOrchestrationService orchestrationService;
-        readonly DispatchPipeline dispatchPipeline;
+        readonly DispatchMiddlewarePipeline dispatchPipeline;
 
         internal TaskActivityDispatcher(
             IOrchestrationService orchestrationService,
             INameVersionObjectManager<TaskActivity> objectManager,
-            DispatchPipeline dispatchPipeline)
+            DispatchMiddlewarePipeline dispatchPipeline)
         {
             this.orchestrationService = orchestrationService ?? throw new ArgumentNullException(nameof(orchestrationService));
             this.objectManager = objectManager ?? throw new ArgumentNullException(nameof(objectManager));
@@ -118,7 +118,7 @@ namespace DurableTask.Core
                 var context = new TaskContext(taskMessage.OrchestrationInstance);
                 HistoryEvent eventToRespond = null;
 
-                var dispatchContext = new DispatchContext();
+                var dispatchContext = new DispatchMiddlewareContext();
                 dispatchContext.SetProperty(taskMessage.OrchestrationInstance);
                 dispatchContext.SetProperty(taskActivity);
                 dispatchContext.SetProperty(scheduledEvent);

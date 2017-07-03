@@ -3,6 +3,25 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory),DurableTask.sln))\tools\DurableTask.props" />
   <PropertyGroup>
     <TargetFramework>net451</TargetFramework>
+    <AssemblyName>DurableTask.AzureStorage</AssemblyName>
+    <RootNamespace>DurableTask.AzureStorage</RootNamespace>
+    <Version>0.1.0-alpha</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Company>Microsoft Corporation</Company>
+  </PropertyGroup>
+  
+  <!-- NuGet Publishing Metadata -->
+  <PropertyGroup>
+    <PackageId>DurableTask.AzureStorage</PackageId>
+    <Authors>Microsoft</Authors>
+    <Description>Azure Storage persistence provider for the Durable Task Framework</Description>
+    <PackageReleaseNotes>This is a preview release of the Azure Storage persistence provider for the Durable Task Framework</PackageReleaseNotes>
+    <PackageTags>Microsoft;Azure;Durable;Orchestration;Workflow;Storage;Provider</PackageTags>
+    <Copyright>(c) Microsoft Corporation. All rights reserved.</Copyright>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeReferenceProjects>true</IncludeReferenceProjects>
   </PropertyGroup>
 
   <ItemGroup>
